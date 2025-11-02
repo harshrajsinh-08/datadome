@@ -1,0 +1,113 @@
+{
+    "initial_report": {
+        "original_shape": [
+            103,
+            10
+        ],
+        "column_indices": {
+            "Cement": 0,
+            "Slag": 1,
+            "Fly ash": 2,
+            "Water": 3,
+            "SP": 4,
+            "Coarse Aggr.": 5,
+            "Fine Aggr.": 6,
+            "SLUMP(cm)": 7,
+            "FLOW(cm)": 8,
+            "Compressive Strength (28-day)(Mpa)": 9
+        }
+    },
+    "profiling_report": {
+        "original_dataset": {
+            "total_rows": 75,
+            "total_columns": 10,
+            "column_names": [
+                "Cement",
+                "Slag",
+                "Fly ash",
+                "Water",
+                "SP",
+                "Coarse Aggr.",
+                "Fine Aggr.",
+                "SLUMP(cm)",
+                "FLOW(cm)",
+                "Compressive Strength (28-day)(Mpa)"
+            ]
+        },
+        "processed_dataset": {
+            "total_rows": 75,
+            "total_columns": 10
+        },
+        "duplicates": {
+            "duplicate_count": 0,
+            "duplicate_indices": []
+        },
+        "missing_values": {
+            "Slag": {
+                "total_missing": 21,
+                "missing_percentage": 28.0,
+                "missing_indices": [
+                    7,
+                    8,
+                    9,
+                    13,
+                    14,
+                    16,
+                    18,
+                    21,
+                    29,
+                    30,
+                    31,
+                    32,
+                    38,
+                    48,
+                    49,
+                    50,
+                    53,
+                    54,
+                    60,
+                    61,
+                    97
+                ]
+            },
+            "Fly ash": {
+                "total_missing": 13,
+                "missing_percentage": 17.33,
+                "missing_indices": [
+                    13,
+                    14,
+                    19,
+                    20,
+                    43,
+                    44,
+                    45,
+                    56,
+                    62,
+                    63,
+                    69,
+                    71,
+                    72
+                ]
+            },
+            "SLUMP(cm)": {
+                "total_missing": 7,
+                "missing_percentage": 9.33,
+                "missing_indices": [
+                    48,
+                    70,
+                    93,
+                    94,
+                    95,
+                    98,
+                    100
+                ]
+            }
+        },
+        "type_validation": {},
+        "outlier_detection": {
+            "outliers_removed": 0,
+            "outlier_percentage": 0.0,
+            "outlier_indices": []
+        }
+    }
+}

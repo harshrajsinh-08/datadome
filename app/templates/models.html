@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Selection</title>
+    <link rel="stylesheet" href="static/css/models.css">
+</head>
+<body>
+    <p>Select an ML Model</p>   
+    <input type="text" id="userInput" placeholder="Enter Target Column">
+    <div class="model-selection" id="model-selection">
+        <div class="prediction">
+            <button class="mainbutton">Regression Models</button>
+            <button class="model-btn" onclick="selectModel('linear_regression')">Linear Regression</button>
+            <button class="model-btn" onclick="selectModel('random_forest')">Random Forest</button>
+            <button class="model-btn" onclick="selectModel('svm')">SVM</button>
+            <button class="model-btn" onclick="selectModel('knn')">KNN</button>
+            <button class="model-btn" onclick="selectModel('decision_tree')">Decision Tree</button>
+        </div>
+        <div class="classification">
+            <button class="mainbutton">Classifiaction Models</button>
+            <button class="model-btn" onclick="selectModel('logistic_regression')">Logistic Regression</button>
+            <button class="model-btn" onclick="selectModel('random_forest')">Random Forest</button>
+            <button class="model-btn" onclick="selectModel('svm')">SVM</button>
+            <button class="model-btn" onclick="selectModel('knn')">KNN</button>
+            <button class="model-btn" onclick="selectModel('decision_tree')">Decision Tree</button>
+        </div>
+    </div>
+
+    <div class="imageContainer"></div>
+
+    <div id="result"></div>
+
+    <script>
+        function captureButtonInfo(event) {
+            let buttonText = event.target.innerText;
+            let parentDiv = event.target.closest("div");
+            let parentIdentifier = parentDiv.id || parentDiv.className || "Unknown Div";
+            let inputValue = document.getElementById("userInput").value || "No Input";
+
+            console.log(inputValue);
+
+            let result = [buttonText, parentIdentifier, inputValue];
+            console.log(result);
+
+            fetch("http://127.0.0.1:5000/capture", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ buttonText: buttonText, parentDiv: parentIdentifier, inputVal: inputValue })
+            });
+            return result;
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll("button").forEach(button => { 
+                button.addEventListener("click", captureButtonInfo);
+            });
+        });
+        function selectModel(model) {
+            fetch("/run_model", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ model_name: model })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerHTML = `<h3>Results</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                console.log("Model Response:", data);
+                
+                // Ensure the image container exists before appending
+                if (!document.getElementById("imageContainer")) {
+                    let container = document.createElement("div");
+                    container.id = "imageContainer";
+                    document.body.appendChild(container); // Append to body
+                }
+
+                // Call function to create the image
+                createImage();
+            })
+            
+            .catch(error => console.error("Error:", error));
+        }
+
+        function createImage() {
+            // Check if image already exists to prevent duplicates
+            let container = document.getElementById("imageContainer");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "imageContainer";
+                document.body.appendChild(container);
+            }
+            // Remove the existing image if it exists
+            
+            // Create an image element
+            let img = document.createElement("img");
+            img.src = "/Users/harsh/DataDome/app/static/metrics.jpeg";  // Set image source
+            img.alt = "Dynamic Image";  // Alternative text
+            img.id = "dynamicImage";  // Assign an ID to avoid duplication
+            img.style.width = "100%";  // Optional: Set size
+            img.style.height = "auto";  // Maintain aspect ratio
+            img.style.marginTop = "10px";
+
+            // Ensure imageContainer exists before appending
+            let existingImage = document.getElementById("dynamicImage");
+            if (existingImage) {
+                existingImage.remove();
+            }
+            
+            container.appendChild(img);
+        }
+    </script>
+
+</body>
+</html>
