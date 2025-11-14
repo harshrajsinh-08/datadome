@@ -108,5 +108,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+// Data type selection function
+function selectDataType(type) {
+    if (type === 'csv') {
+        // Show CSV upload options
+        document.querySelector('.data-type-selection').style.display = 'none';
+        document.getElementById('buts').style.display = 'flex';
+    } else if (type === 'image') {
+        // Redirect to image processing page
+        window.location.href = '/image_processing';
+    } else if (type === 'graph') {
+        // Redirect to graph processing page
+        window.location.href = '/graph_processing';
+    } else if (type === 'advanced_graph') {
+        // Redirect to advanced graph processing page
+        window.location.href = '/advanced_graph_processing';
+    }
+}
+
     
 

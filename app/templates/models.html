@@ -17,14 +17,16 @@
             <button class="model-btn" onclick="selectModel('svm')">SVM</button>
             <button class="model-btn" onclick="selectModel('knn')">KNN</button>
             <button class="model-btn" onclick="selectModel('decision_tree')">Decision Tree</button>
+            <button class="model-btn" onclick="selectModel('gradient_boosting')">Gradient Boosting</button>
         </div>
         <div class="classification">
-            <button class="mainbutton">Classifiaction Models</button>
+            <button class="mainbutton">Classification Models</button>
             <button class="model-btn" onclick="selectModel('logistic_regression')">Logistic Regression</button>
             <button class="model-btn" onclick="selectModel('random_forest')">Random Forest</button>
             <button class="model-btn" onclick="selectModel('svm')">SVM</button>
             <button class="model-btn" onclick="selectModel('knn')">KNN</button>
             <button class="model-btn" onclick="selectModel('decision_tree')">Decision Tree</button>
+            <button class="model-btn" onclick="selectModel('gradient_boosting')">Gradient Boosting</button>
         </div>
     </div>
 
@@ -33,24 +35,36 @@
     <div id="result"></div>
 
     <script>
-        function captureButtonInfo(event) {
+        async function captureButtonInfo(event) {
             let buttonText = event.target.innerText;
             let parentDiv = event.target.closest("div");
             let parentIdentifier = parentDiv.id || parentDiv.className || "Unknown Div";
             let inputValue = document.getElementById("userInput").value || "No Input";
 
-            console.log(inputValue);
+            console.log("Capturing button info:", inputValue);
 
             let result = [buttonText, parentIdentifier, inputValue];
-            console.log(result);
+            console.log("Result array:", result);
 
-            fetch("http://127.0.0.1:5000/capture", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ buttonText: buttonText, parentDiv: parentIdentifier, inputVal: inputValue })
-            });
+            // Wait for capture to complete before returning
+            try {
+                const response = await fetch("/capture", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ buttonText: buttonText, parentDiv: parentIdentifier, inputVal: inputValue })
+                });
+                
+                if (response.ok) {
+                    console.log("Capture successful");
+                } else {
+                    console.error("Capture failed");
+                }
+            } catch (error) {
+                console.error("Error capturing button info:", error);
+            }
+            
             return result;
         }
 
@@ -59,7 +73,20 @@
                 button.addEventListener("click", captureButtonInfo);
             });
         });
-        function selectModel(model) {
+        
+        async function selectModel(model) {
+            // Show loading indicator
+            document.getElementById("result").innerHTML = `<h3>Processing ${model.replace('_', ' ').toUpperCase()}...</h3><p>Please wait while we train the model and generate comparisons...</p>`;
+            
+            // Remove existing image
+            let existingImage = document.getElementById("dynamicImage");
+            if (existingImage) {
+                existingImage.remove();
+            }
+            
+            // Add a small delay to ensure session is set
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             fetch("/run_model", {
                 method: "POST",
                 headers: {
@@ -67,49 +94,83 @@
                 },
                 body: JSON.stringify({ model_name: model })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                document.getElementById("result").innerHTML = `<h3>Results</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                document.getElementById("result").innerHTML = `<h3>Results for ${model.replace('_', ' ').toUpperCase()}</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
                 console.log("Model Response:", data);
                 
                 // Ensure the image container exists before appending
-                if (!document.getElementById("imageContainer")) {
+                if (!document.querySelector(".imageContainer")) {
                     let container = document.createElement("div");
-                    container.id = "imageContainer";
-                    document.body.appendChild(container); // Append to body
+                    container.className = "imageContainer";
+                    document.body.appendChild(container);
                 }
 
-                // Call function to create the image
-                createImage();
+                // Call function to create the image with a small delay to ensure it's generated
+                setTimeout(() => {
+                    createImage();
+                }, 1000);
             })
-            
-            .catch(error => console.error("Error:", error));
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("result").innerHTML = `<h3>Error</h3><p>Failed to process model: ${error.message}</p>`;
+            });
         }
 
         function createImage() {
             // Check if image already exists to prevent duplicates
-            let container = document.getElementById("imageContainer");
+            let container = document.querySelector(".imageContainer");
             if (!container) {
                 container = document.createElement("div");
-                container.id = "imageContainer";
+                container.className = "imageContainer";
                 document.body.appendChild(container);
             }
-            // Remove the existing image if it exists
             
-            // Create an image element
-            let img = document.createElement("img");
-            img.src = "/Users/harsh/DataDome/app/static/metrics.jpeg";  // Set image source
-            img.alt = "Dynamic Image";  // Alternative text
-            img.id = "dynamicImage";  // Assign an ID to avoid duplication
-            img.style.width = "100%";  // Optional: Set size
-            img.style.height = "auto";  // Maintain aspect ratio
-            img.style.marginTop = "10px";
-
-            // Ensure imageContainer exists before appending
+            // Remove the existing image if it exists
             let existingImage = document.getElementById("dynamicImage");
             if (existingImage) {
                 existingImage.remove();
             }
+            
+            // Add loading text
+            let loadingText = document.createElement("p");
+            loadingText.textContent = "Loading comparison visualization...";
+            loadingText.id = "loadingText";
+            container.appendChild(loadingText);
+            
+            // Create an image element with cache-busting timestamp
+            let img = document.createElement("img");
+            img.src = "/get_matrix_image?" + new Date().getTime();  // Use Flask route with cache busting
+            img.alt = "Model Comparison Results";
+            img.id = "dynamicImage";
+            img.style.width = "100%";
+            img.style.height = "auto";
+            img.style.marginTop = "20px";
+            img.style.border = "1px solid #ddd";
+            img.style.borderRadius = "8px";
+            img.style.display = "none"; // Hide initially
+            
+            // Handle image load success
+            img.onload = function() {
+                let loading = document.getElementById("loadingText");
+                if (loading) loading.remove();
+                img.style.display = "block";
+            };
+            
+            // Handle image load error
+            img.onerror = function() {
+                let loading = document.getElementById("loadingText");
+                if (loading) loading.remove();
+                let errorText = document.createElement("p");
+                errorText.textContent = "Failed to load comparison visualization. Please try again.";
+                errorText.style.color = "#ff6b6b";
+                container.appendChild(errorText);
+            };
             
             container.appendChild(img);
         }

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataDome - Image Dataset Processing</title>
+    <link rel="stylesheet" href="/static/css/image_processing.css">
+</head>
+<body>
+    <div class="container">
+        <h1>DataDome Image Dataset Processing</h1>
+        <p class="subtitle">Automatically clean and optimize your image datasets</p>
+        
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload Image Dataset</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-content">
+                    <div class="upload-icon">📁</div>
+                    <p>Drag and drop images here or click to browse</p>
+                    <input type="file" id="imageFiles" multiple accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('imageFiles').click()">
+                        Choose Images
+                    </button>
+                </div>
+            </div>
+            
+            <!-- CSV Upload Section -->
+            <div class="csv-upload-section" style="margin-top: 20px;">
+                <h3>📊 Optional: Upload Labels CSV</h3>
+                <p class="csv-description">Upload a CSV file with image labels and metadata for supervised learning</p>
+                <div class="csv-upload-area">
+                    <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                    <button class="csv-upload-btn" onclick="document.getElementById('csvFile').click()">
+                        📄 Choose CSV File
+                    </button>
+                    <div id="csvStatus" class="csv-status"></div>
+                </div>
+                <div class="csv-info">
+                    <small>
+                        <strong>CSV Format:</strong> First column should contain image filenames (without extension).
+                        Additional columns can contain labels, categories, or metadata.
+                        <br>
+                        <strong>Example:</strong> Name,Type1,Type2,Category
+                    </small>
+                </div>
+            </div>
+            
+            <div id="uploadStatus" class="upload-status"></div>
+        </div>
+
+        <!-- Processing Parameters -->
+        <div class="parameters-section">
+            <h2>Processing Parameters</h2>
+            <div class="parameters-grid">
+                <div class="param-group">
+                    <h3>Resolution Filters</h3>
+                    <label>
+                        Min Resolution (pixels):
+                        <input type="number" id="minResolution" value="100" min="1">
+                    </label>
+                    <label>
+                        Max Resolution (pixels):
+                        <input type="number" id="maxResolution" value="16777216" min="1">
+                    </label>
+                </div>
+
+                <div class="param-group">
+                    <h3>Quality Filters</h3>
+                    <label>
+                        Min Blur Threshold:
+                        <input type="number" id="minBlur" value="10" min="0" step="10">
+                        <small>Higher = sharper images required</small>
+                    </label>
+                    <label>
+                        Min Brightness:
+                        <input type="number" id="minBrightness" value="10" min="0" max="255">
+                    </label>
+                    <label>
+                        Max Brightness:
+                        <input type="number" id="maxBrightness" value="245" min="0" max="255">
+                    </label>
+                    <label>
+                        Min Contrast:
+                        <input type="number" id="minContrast" value="5" min="0" step="5">
+                    </label>
+                </div>
+
+                <div class="param-group">
+                    <h3>Cleaning Options</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="removeDuplicates" checked>
+                        Remove Duplicate Images
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="removeCorrupted">
+                        Remove Corrupted Images
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="testCorruption">
+                        🧪 Test Corruption Detection (adds test corrupted images)
+                    </label>
+                </div>
+
+                <div class="param-group">
+                    <h3>🚀 Quality Enhancement</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="enhanceImages">
+                        Enable Image Enhancement
+                    </label>
+                    <div id="enhancementOptions" style="display: none; margin-top: 15px; padding-left: 20px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="autoBrightness" checked>
+                            Auto-adjust Brightness
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enhanceContrast" checked>
+                            Enhance Contrast
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="sharpenImages" checked>
+                            Sharpen Images
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="reduceNoise" checked>
+                            Reduce Noise
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="standardizeFormat" checked>
+                            Standardize to JPEG
+                        </label>
+                    </div>
+                </div>
+
+                <div class="param-group">
+                    <h3>🤖 ML Model Training</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="trainModels">
+                        Train ML Models for Performance Comparison
+                    </label>
+                    <div id="mlOptions" style="display: none; margin-top: 15px; padding-left: 20px;">
+                        <label>
+                            Max Images for ML Training:
+                            <input type="number" id="maxImagesML" value="500" min="50" max="2000" step="50">
+                            <small>Limit images for faster training (recommended: 200-500)</small>
+                        </label>
+                        <div id="targetColumnSelection" style="display: none; margin-top: 15px;">
+                            <label>
+                                Target Column for Prediction:
+                                <select id="targetColumn">
+                                    <option value="">Select target column...</option>
+                                </select>
+                                <small>Choose which column from your CSV to predict</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Button -->
+        <div class="process-section">
+            <button class="process-btn" id="processBtn" onclick="processImages()">
+                🚀 Process Image Dataset
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>Processing Results</h2>
+            
+            <div class="summary-section">
+                <h3>Summary</h3>
+                <pre id="summaryText"></pre>
+            </div>
+
+            <div class="visualizations-section">
+                <h3>Visualizations</h3>
+                <div class="viz-grid">
+                    <div class="viz-item">
+                        <h4>Cleaning Results Overview</h4>
+                        <img id="mainResultsImg" src="" alt="Main Results" style="display: none;">
+                    </div>
+                    <div class="viz-item">
+                        <h4>Quality Metrics Comparison</h4>
+                        <img id="qualityComparisonImg" src="" alt="Quality Comparison" style="display: none;">
+                    </div>
+                    <div class="viz-item">
+                        <h4>Sample Original Images</h4>
+                        <img id="sampleOriginalImg" src="" alt="Sample Original" style="display: none;">
+                    </div>
+                    <div class="viz-item">
+                        <h4>Sample Cleaned Images</h4>
+                        <img id="sampleCleanedImg" src="" alt="Sample Cleaned" style="display: none;">
+                    </div>
+                    <div class="viz-item" id="modelComparisonViz" style="display: none;">
+                        <h4>🤖 ML Model Performance Comparison</h4>
+                        <img id="modelComparisonImg" src="" alt="Model Comparison" style="display: none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <h3>Processing Image Dataset...</h3>
+                <p id="loadingText">Analyzing images and applying quality filters...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedDatasetPath = null;
+        let uploadedCsvPath = null;
+
+        // Handle CSV file upload
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadCsvFile(file);
+            }
+        });
+
+        function uploadCsvFile(file) {
+            const formData = new FormData();
+            formData.append('csv_file', file);
+
+            const statusDiv = document.getElementById('csvStatus');
+            statusDiv.innerHTML = `<p>📤 Uploading ${file.name}...</p>`;
+
+            fetch('/upload_csv', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = `
+                        <p class="success">✅ ${data.message}</p>
+                        <p>Columns: ${data.columns.join(', ')}</p>
+                        <p>Rows: ${data.rows}</p>
+                    `;
+                    uploadedCsvPath = data.csv_path;
+                    
+                    // Populate target column dropdown
+                    const targetSelect = document.getElementById('targetColumn');
+                    targetSelect.innerHTML = '<option value="">Select target column...</option>';
+                    
+                    // Skip first column (assumed to be image names) and add others
+                    data.columns.slice(1).forEach(column => {
+                        const option = document.createElement('option');
+                        option.value = column;
+                        option.textContent = column;
+                        targetSelect.appendChild(option);
+                    });
+                    
+                    // Show target column selection
+                    document.getElementById('targetColumnSelection').style.display = 'block';
+                } else {
+                    statusDiv.innerHTML = `<p class="error">❌ ${data.error}</p>`;
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<p class="error">❌ CSV upload failed: ${error.message}</p>`;
+            });
+        }
+
+        function clearPreviousResults() {
+            // Hide and clear results section
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('summaryText').textContent = '';
+            
+            // Clear all visualization images
+            const images = ['mainResultsImg', 'qualityComparisonImg', 'sampleOriginalImg', 'sampleCleanedImg'];
+            images.forEach(imgId => {
+                const img = document.getElementById(imgId);
+                if (img) {
+                    img.src = '';
+                    img.style.display = 'none';
+                }
+            });
+            
+            // Reset upload status
+            uploadedDatasetPath = null;
+            uploadedCsvPath = null;
+            document.getElementById('processBtn').disabled = true;
+            
+            // Clear CSV status
+            document.getElementById('csvStatus').innerHTML = '';
+        }
+
+        // Handle enhancement options toggle
+        document.getElementById('enhanceImages').addEventListener('change', function() {
+            const enhancementOptions = document.getElementById('enhancementOptions');
+            if (this.checked) {
+                enhancementOptions.style.display = 'block';
+            } else {
+                enhancementOptions.style.display = 'none';
+            }
+        });
+
+        // Handle ML training options toggle
+        document.getElementById('trainModels').addEventListener('change', function() {
+            const mlOptions = document.getElementById('mlOptions');
+            if (this.checked) {
+                mlOptions.style.display = 'block';
+            } else {
+                mlOptions.style.display = 'none';
+            }
+        });
+
+        // Handle file upload
+        document.getElementById('imageFiles').addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                uploadImages(files);
+            }
+        });
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadImages(files);
+            }
+        });
+
+        function uploadImages(files) {
+            // Clear previous results from UI
+            clearPreviousResults();
+            
+            const formData = new FormData();
+            
+            // Add all files to form data
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = `
+                <p>🧹 Clearing previous uploads...</p>
+                <p>📤 Uploading ${files.length} new images...</p>
+            `;
+
+            fetch('/upload_images', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = `
+                        <p class="success">✅ ${data.message}</p>
+                        <p class="info">🧹 Previous uploads cleared</p>
+                        <p>Dataset ready for processing</p>
+                    `;
+                    uploadedDatasetPath = data.dataset_path;
+                    document.getElementById('processBtn').disabled = false;
+                } else {
+                    statusDiv.innerHTML = `<p class="error">❌ ${data.error}</p>`;
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<p class="error">❌ Upload failed: ${error.message}</p>`;
+            });
+        }
+
+        function processImages() {
+            if (!uploadedDatasetPath) {
+                alert('Please upload images first');
+                return;
+            }
+
+            // Show loading overlay
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Get parameters
+            const params = {
+                dataset_path: uploadedDatasetPath,
+                min_resolution: parseInt(document.getElementById('minResolution').value),
+                max_resolution: parseInt(document.getElementById('maxResolution').value),
+                min_blur_threshold: parseInt(document.getElementById('minBlur').value),
+                min_brightness: parseInt(document.getElementById('minBrightness').value),
+                max_brightness: parseInt(document.getElementById('maxBrightness').value),
+                min_contrast: parseInt(document.getElementById('minContrast').value),
+                remove_duplicates: document.getElementById('removeDuplicates').checked,
+                remove_corrupted: document.getElementById('removeCorrupted').checked,
+                test_corruption: document.getElementById('testCorruption').checked,
+                enhance_images: document.getElementById('enhanceImages').checked,
+                enhancement_options: {
+                    auto_brightness: document.getElementById('autoBrightness').checked,
+                    enhance_contrast: document.getElementById('enhanceContrast').checked,
+                    sharpen: document.getElementById('sharpenImages').checked,
+                    denoise: document.getElementById('reduceNoise').checked,
+                    standardize_format: document.getElementById('standardizeFormat').checked,
+                    target_format: 'JPEG'
+                },
+                train_models: document.getElementById('trainModels').checked,
+                max_images_for_ml: parseInt(document.getElementById('maxImagesML').value),
+                csv_path: uploadedCsvPath,
+                target_column: document.getElementById('targetColumn').value
+            };
+
+            fetch('/process_images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(params)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading overlay
+                document.getElementById('loadingOverlay').style.display = 'none';
+                
+                if (data.success) {
+                    // Show results
+                    showResults(data);
+                } else {
+                    alert(`Processing failed: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                alert(`Processing failed: ${error.message}`);
+            });
+        }
+
+        function showResults(data) {
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // Display summary
+            document.getElementById('summaryText').textContent = data.summary;
+            
+            // Display visualizations
+            const visualizations = data.visualizations;
+            
+            if (visualizations.main_results) {
+                const img = document.getElementById('mainResultsImg');
+                img.src = visualizations.main_results + '?' + new Date().getTime();
+                img.style.display = 'block';
+            }
+            
+            if (visualizations.quality_comparison) {
+                const img = document.getElementById('qualityComparisonImg');
+                img.src = visualizations.quality_comparison + '?' + new Date().getTime();
+                img.style.display = 'block';
+            }
+            
+            if (visualizations.sample_original) {
+                const img = document.getElementById('sampleOriginalImg');
+                img.src = visualizations.sample_original + '?' + new Date().getTime();
+                img.style.display = 'block';
+            }
+            
+            if (visualizations.sample_cleaned) {
+                const img = document.getElementById('sampleCleanedImg');
+                img.src = visualizations.sample_cleaned + '?' + new Date().getTime();
+                img.style.display = 'block';
+            }
+            
+            if (visualizations.model_comparison) {
+                const vizItem = document.getElementById('modelComparisonViz');
+                const img = document.getElementById('modelComparisonImg');
+                img.src = visualizations.model_comparison + '?' + new Date().getTime();
+                img.style.display = 'block';
+                vizItem.style.display = 'block';
+            }
+            
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

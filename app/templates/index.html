@@ -11,7 +11,33 @@
         <img src="static/img/logo.jpeg" alt="DataDome" >
     </div>
     <br>
-    <div class="buts" id="buts">
+    <div class="data-type-selection">
+        <h2>Choose Your Data Type</h2>
+        <div class="data-type-cards">
+            <div class="data-card" onclick="selectDataType('csv')">
+                <div class="card-icon">📊</div>
+                <h3>CSV/Tabular Data</h3>
+                <p>Clean and process structured datasets with advanced ML pipelines</p>
+            </div>
+            <div class="data-card" onclick="selectDataType('image')">
+                <div class="card-icon">🖼️</div>
+                <h3>Image Dataset</h3>
+                <p>Automatically clean and optimize image datasets for computer vision</p>
+            </div>
+            <div class="data-card" onclick="selectDataType('graph')">
+                <div class="card-icon">🕸️</div>
+                <h3>Graph Dataset</h3>
+                <p>Clean and analyze network data with advanced graph algorithms</p>
+            </div>
+            <div class="data-card" onclick="selectDataType('advanced_graph')">
+                <div class="card-icon">🚀</div>
+                <h3>Advanced Graph Processing</h3>
+                <p>Neo4j integration, GNNs, and modern graph ML techniques</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="buts" id="buts" style="display: none;">
         <button class="button" id="addButton">Add</button>
         <div id="urlInputContainer" class="hidden">
             <input type="text" id="datasetUrl" placeholder="Enter dataset URL">

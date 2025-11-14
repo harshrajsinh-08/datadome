@@ -65,3 +65,28 @@ def main(file_path, output_dir = 'output', gen_syn_data=False, target=None, task
 if __name__ == "__main__":
     file_path = "app/uploads/user_data.csv"
     processed_data, report = main(file_path)
+
+
+
+
+
+
+
+## Image 
+
+# duplicate by perceptual hashing
+# brightness analysis
+# lapcian variance for blur detection
+# contrast detection by fiinding the devviation of the pixels
+
+
+# Graph
+# Self-Loop Removal → Edge validation (source == target)
+# Duplicate Edges → Graph type conversion
+# Isolated Nodes → Degree = 0 filtering
+# Low-Degree Nodes → Adaptive degree filtering:
+# Undirected: total degree < threshold
+# Directed: BOTH in-degree AND out-degree < threshold
+# Component Filtering → BFS/DFS for connected components
+# Anomaly Detection → IQR Method (statistical outliers)
+# Community Detection → Louvain algorithm (modularity optimization)

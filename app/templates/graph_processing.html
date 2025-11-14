@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataDome - Graph Dataset Processing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/graph_processing.css') }}">
+    <style>
+        /* Fallback styles in case CSS file doesn't load */
+        body.graph-processing-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px 0;
+        }
+        .graph-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="graph-processing-page">
+    <div class="graph-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="/" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            <a href="/advanced_graph_processing" class="btn btn-outline-success">
+                <i class="fas fa-rocket"></i> Advanced Processing
+            </a>
+        </div>
+        
+        <h1>DataDome Graph Dataset Processing</h1>
+        <p class="subtitle">Clean and optimize your graph datasets with advanced ML comparison</p>
+        
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload Graph Dataset</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-content">
+                    <div class="upload-icon">🕸️</div>
+                    <p>Upload graph files (CSV, EdgeList, GML, GraphML)</p>
+                    <input type="file" id="graphFile" accept=".csv,.txt,.edgelist,.gml,.graphml" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('graphFile').click()">
+                        Choose Graph File
+                    </button>
+                </div>
+            </div>
+            <div id="uploadStatus" class="upload-status"></div>
+        </div>
+
+        <!-- Graph Properties -->
+        <div class="properties-section">
+            <h2>Graph Properties</h2>
+            <div class="properties-grid">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="isDirected">
+                    Directed Graph
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="isWeighted">
+                    Weighted Edges
+                </label>
+            </div>
+        </div>
+
+        <!-- Processing Parameters -->
+        <div class="parameters-section">
+            <h2>Cleaning Parameters</h2>
+            <div class="parameters-grid">
+                <div class="param-group">
+                    <h3>Node Filtering</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="removeIsolated" checked>
+                        Remove Isolated Nodes
+                    </label>
+                    <label>
+                        Min Degree Threshold:
+                        <input type="number" id="minDegree" value="1" min="0" max="10">
+                        <small>Remove nodes with degree below this threshold</small>
+                    </label>
+                </div>
+
+                <div class="param-group">
+                    <h3>Edge Filtering</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="removeSelfLoops" checked>
+                        Remove Self Loops
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="removeDuplicates" checked>
+                        Remove Duplicate Edges
+                    </label>
+                </div>
+
+                <div class="param-group">
+                    <h3>Component Filtering</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="keepLargestComponent" checked>
+                        Keep Only Largest Component
+                    </label>
+                    <label>
+                        Min Component Size:
+                        <input type="number" id="minComponentSize" value="5" min="1" max="100">
+                        <small>Remove components smaller than this size</small>
+                    </label>
+                </div>
+
+                <div class="param-group">
+                    <h3>🤖 ML Model Training</h3>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="trainModels">
+                        Train ML Models for Performance Comparison
+                    </label>
+                    <div id="mlOptions" style="display: none; margin-top: 15px;">
+                        <label>
+                            ML Task Type:
+                            <select id="mlTaskType">
+                                <option value="degree_classification">Node Degree Classification</option>
+                                <option value="centrality_classification">Centrality Classification</option>
+                                <option value="community_detection">Community Detection</option>
+                            </select>
+                        </label>
+                        <label>
+                            Max Nodes for ML:
+                            <input type="number" id="maxNodesML" value="1000" min="100" max="5000" step="100">
+                            <small>Limit nodes for faster training</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Button -->
+        <div class="process-section">
+            <button class="process-btn" id="processBtn" onclick="processGraph()" disabled>
+                🚀 Process Graph Dataset
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>Processing Results</h2>
+            
+            <div class="summary-section">
+                <h3>Summary</h3>
+                <pre id="summaryText"></pre>
+            </div>
+
+            <div class="visualizations-section">
+                <h3>Visualizations</h3>
+                <div class="viz-grid">
+                    <div class="viz-item" id="mlComparisonViz" style="display: none;">
+                        <h4>🤖 ML Model Performance Comparison</h4>
+                        <img id="mlComparisonImg" src="" alt="ML Comparison" style="display: none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <h3>Processing Graph Dataset...</h3>
+                <p id="loadingText">Analyzing graph structure and applying cleaning algorithms...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let uploadedGraphPath = null;
+        let graphFormat = null;
+
+        // Handle ML training options toggle
+        document.getElementById('trainModels').addEventListener('change', function() {
+            const mlOptions = document.getElementById('mlOptions');
+            if (this.checked) {
+                mlOptions.style.display = 'block';
+            } else {
+                mlOptions.style.display = 'none';
+            }
+        });
+
+        // Handle graph file upload
+        document.getElementById('graphFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadGraphFile(file);
+            }
+        });
+
+        function uploadGraphFile(file) {
+            const formData = new FormData();
+            formData.append('graph_file', file);
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = `
+                <p>🧹 Clearing previous graphs...</p>
+                <p>📤 Uploading ${file.name}...</p>
+            `;
+
+            fetch('/upload_graph', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = `
+                        <p class="success">✅ ${data.message}</p>
+                        <p class="info">📊 Nodes: ${data.nodes.toLocaleString()}, Edges: ${data.edges.toLocaleString()}</p>
+                        <p>Graph ready for processing</p>
+                    `;
+                    uploadedGraphPath = data.graph_path;
+                    graphFormat = data.graph_format;
+                    document.getElementById('processBtn').disabled = false;
+                } else {
+                    statusDiv.innerHTML = `<p class="error">❌ ${data.error}</p>`;
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = `<p class="error">❌ Upload failed: ${error.message}</p>`;
+            });
+        }
+
+        function processGraph() {
+            if (!uploadedGraphPath) {
+                alert('Please upload a graph file first');
+                return;
+            }
+
+            // Show loading overlay
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Get parameters
+            const params = {
+                graph_path: uploadedGraphPath,
+                graph_format: graphFormat,
+                directed: document.getElementById('isDirected').checked,
+                weighted: document.getElementById('isWeighted').checked,
+                remove_isolated_nodes: document.getElementById('removeIsolated').checked,
+                remove_self_loops: document.getElementById('removeSelfLoops').checked,
+                remove_duplicate_edges: document.getElementById('removeDuplicates').checked,
+                min_degree_threshold: parseInt(document.getElementById('minDegree').value),
+                keep_largest_component: document.getElementById('keepLargestComponent').checked,
+                min_component_size: parseInt(document.getElementById('minComponentSize').value),
+                train_models: document.getElementById('trainModels').checked,
+                ml_task_type: document.getElementById('mlTaskType').value,
+                max_nodes_for_ml: parseInt(document.getElementById('maxNodesML').value)
+            };
+
+            fetch('/process_graph', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(params)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading overlay
+                document.getElementById('loadingOverlay').style.display = 'none';
+                
+                if (data.success) {
+                    showResults(data);
+                } else {
+                    alert(`Processing failed: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                alert(`Processing failed: ${error.message}`);
+            });
+        }
+
+        function showResults(data) {
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // Display summary
+            document.getElementById('summaryText').textContent = data.summary;
+            
+            // Display ML comparison visualization if available
+            if (data.visualizations && data.visualizations.ml_comparison) {
+                const vizItem = document.getElementById('mlComparisonViz');
+                const img = document.getElementById('mlComparisonImg');
+                img.src = data.visualizations.ml_comparison + '?' + new Date().getTime();
+                img.style.display = 'block';
+                vizItem.style.display = 'block';
+            }
+            
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearPreviousResults() {
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('summaryText').textContent = '';
+            
+            const img = document.getElementById('mlComparisonImg');
+            if (img) {
+                img.src = '';
+                img.style.display = 'none';
+            }
+            
+            uploadedGraphPath = null;
+            graphFormat = null;
+            document.getElementById('processBtn').disabled = true;
+            document.getElementById('uploadStatus').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataDome - Advanced Graph Processing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --light-bg: #ecf0f1;
+            --dark-text: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content-wrapper {
+            padding: 40px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .form-check {
+            margin-bottom: 15px;
+        }
+
+        .form-check-input {
+            width: 1.2em;
+            height: 1.2em;
+            margin-top: 0.1em;
+        }
+
+        .form-check-label {
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #2980b9 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(149, 165, 166, 0.3);
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            color: #0c5460;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--secondary-color);
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: var(--dark-text);
+            font-weight: 500;
+        }
+
+        .visualization-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .visualization-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .summary-text {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 10px 10px 0 0;
+            color: var(--dark-text);
+            font-weight: 600;
+            padding: 12px 20px;
+            margin-right: 5px;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .tab-content {
+            padding: 20px 0;
+        }
+
+        .neo4j-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .advanced-section {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .ml-section {
+            background: linear-gradient(135deg, #e2e3f0 0%, #d1ecf1 100%);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .feature-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .feature-highlight h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .parameter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1><i class="fas fa-project-diagram"></i> DataDome Advanced Graph Processing</h1>
+            <p>Clean, analyze, and optimize graph datasets with Neo4j integration and modern ML techniques</p>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Feature Highlights -->
+            <div class="feature-highlight">
+                <h5><i class="fas fa-rocket"></i> Advanced Features: Neo4j Integration • Graph Neural Networks • Anomaly Detection • Community Analysis</h5>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="section-card">
+                <h3 class="section-title">
+                    <i class="fas fa-upload"></i>
+                    Graph Dataset Upload
+                </h3>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label">Select Graph File</label>
+                            <input type="file" class="form-control" id="graphFile" 
+                                   accept=".csv,.txt,.edgelist,.gml,.graphml,.gexf,.json">
+                            <small class="text-muted">
+                                Supported formats: CSV, EdgeList, GML, GraphML, GEXF, JSON
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">Graph Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="directed">
+                                <label class="form-check-label" for="directed">Directed Graph</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="weighted">
+                                <label class="form-check-label" for="weighted">Weighted Edges</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="uploadGraph()">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload Graph
+                </button>
+            </div>
+
+            <!-- Configuration Tabs -->
+            <div class="section-card">
+                <ul class="nav nav-tabs" id="configTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="neo4j-tab" data-bs-toggle="tab" data-bs-target="#neo4j" type="button" role="tab">
+                            <i class="fas fa-database"></i> Neo4j Integration
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="cleaning-tab" data-bs-toggle="tab" data-bs-target="#cleaning" type="button" role="tab">
+                            <i class="fas fa-broom"></i> Advanced Cleaning
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ml-tab" data-bs-toggle="tab" data-bs-target="#ml" type="button" role="tab">
+                            <i class="fas fa-brain"></i> ML & Analytics
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="configTabContent">
+                    <!-- Neo4j Configuration -->
+                    <div class="tab-pane fade show active neo4j-section" id="neo4j" role="tabpanel">
+                        <h4><i class="fas fa-database"></i> Neo4j Database Configuration</h4>
+                        <p class="text-muted">Connect to Neo4j for advanced graph analytics and storage</p>
+                        
+                        <div class="parameter-grid">
+                            <div class="form-group">
+                                <label class="form-label">Neo4j URI</label>
+                                <input type="text" class="form-control" id="neo4jUri" 
+                                       placeholder="bolt://localhost:7687">
+                                <small class="text-muted">Neo4j database connection URI</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" id="neo4jUser" 
+                                       placeholder="neo4j">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="neo4jPassword" 
+                                       placeholder="Enter password">
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="exportToNeo4j">
+                                    <label class="form-check-label" for="exportToNeo4j">
+                                        Export cleaned graph to Neo4j
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="useNeo4jAnalytics">
+                                    <label class="form-check-label" for="useNeo4jAnalytics">
+                                        Use Neo4j graph algorithms
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Cleaning Configuration -->
+                    <div class="tab-pane fade advanced-section" id="cleaning" role="tabpanel">
+                        <h4><i class="fas fa-broom"></i> Advanced Graph Cleaning</h4>
+                        <p class="text-muted">Configure advanced cleaning techniques with anomaly detection</p>
+                        
+                        <div class="parameter-grid">
+                            <div>
+                                <h5>Basic Cleaning</h5>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="removeIsolatedNodes" checked>
+                                    <label class="form-check-label" for="removeIsolatedNodes">Remove isolated nodes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="removeSelfLoops" checked>
+                                    <label class="form-check-label" for="removeSelfLoops">Remove self loops</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="removeDuplicateEdges" checked>
+                                    <label class="form-check-label" for="removeDuplicateEdges">Remove duplicate edges</label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h5>Degree Filtering</h5>
+                                <div class="form-group">
+                                    <label class="form-label">Minimum Degree Threshold</label>
+                                    <input type="number" class="form-control" id="minDegreeThreshold" value="1" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Maximum Degree Threshold</label>
+                                    <input type="number" class="form-control" id="maxDegreeThreshold" placeholder="No limit">
+                                    <small class="text-muted">Leave empty for no upper limit</small>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h5>Component Analysis</h5>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="keepLargestComponent" checked>
+                                    <label class="form-check-label" for="keepLargestComponent">Keep largest component</label>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Minimum Component Size</label>
+                                    <input type="number" class="form-control" id="minComponentSize" value="5" min="1">
+                                </div>
+                            </div>
+
+                            <div>
+                                <h5>Advanced Options</h5>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="anomalyDetection" checked>
+                                    <label class="form-check-label" for="anomalyDetection">Statistical anomaly detection</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="preserveImportantNodes" checked>
+                                    <label class="form-check-label" for="preserveImportantNodes">Preserve important nodes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="removeBridges">
+                                    <label class="form-check-label" for="removeBridges">Remove bridge edges</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ML Configuration -->
+                    <div class="tab-pane fade ml-section" id="ml" role="tabpanel">
+                        <h4><i class="fas fa-brain"></i> Machine Learning & Analytics</h4>
+                        <p class="text-muted">Configure advanced ML models and graph analytics</p>
+                        
+                        <div class="parameter-grid">
+                            <div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="trainModels" checked>
+                                    <label class="form-check-label" for="trainModels">
+                                        <strong>Enable ML Model Training</strong>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group mt-3">
+                                    <label class="form-label">ML Task Type</label>
+                                    <select class="form-select" id="mlTaskType">
+                                        <option value="centrality_classification">Centrality Classification</option>
+                                        <option value="community_role">Community Role Detection</option>
+                                        <option value="structural_role">Structural Role Analysis</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="form-group">
+                                    <label class="form-label">Max Nodes for ML</label>
+                                    <input type="number" class="form-control" id="maxNodesForMl" value="2000" min="100" max="10000">
+                                    <small class="text-muted">Limit nodes for performance</small>
+                                </div>
+
+                                <div class="alert alert-info mt-3">
+                                    <strong>Advanced Models Available:</strong><br>
+                                    • XGBoost & LightGBM<br>
+                                    • Graph Neural Networks<br>
+                                    • Node2Vec Embeddings<br>
+                                    • Community Detection
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Button -->
+            <div class="text-center">
+                <button type="button" class="btn btn-primary btn-lg" onclick="processAdvancedGraph()" id="processBtn">
+                    <i class="fas fa-cogs"></i> Process Advanced Graph Dataset
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Processing...</span>
+                </div>
+                <p class="mt-3">Processing graph with advanced techniques...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-container" id="resultsContainer">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let uploadedGraphPath = null;
+
+        async function uploadGraph() {
+            const fileInput = document.getElementById('graphFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a graph file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('graph_file', file);
+
+            try {
+                const response = await fetch('/upload_graph', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    uploadedGraphPath = result.graph_path;
+                    showAlert('success', `Graph uploaded successfully: ${result.message}`);
+                    document.getElementById('processBtn').disabled = false;
+                } else {
+                    showAlert('danger', `Upload failed: ${result.error}`);
+                }
+            } catch (error) {
+                showAlert('danger', `Upload error: ${error.message}`);
+            }
+        }
+
+        async function processAdvancedGraph() {
+            if (!uploadedGraphPath) {
+                showAlert('danger', 'Please upload a graph file first');
+                return;
+            }
+
+            // Show loading spinner
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('processBtn').disabled = true;
+
+            // Collect parameters
+            const params = {
+                graph_path: uploadedGraphPath,
+                directed: document.getElementById('directed').checked,
+                weighted: document.getElementById('weighted').checked,
+                
+                // Neo4j parameters
+                neo4j_uri: document.getElementById('neo4jUri').value.trim(),
+                neo4j_user: document.getElementById('neo4jUser').value.trim(),
+                neo4j_password: document.getElementById('neo4jPassword').value.trim(),
+                export_to_neo4j: document.getElementById('exportToNeo4j').checked,
+                use_neo4j_analytics: document.getElementById('useNeo4jAnalytics').checked,
+                
+                // Advanced cleaning parameters
+                remove_isolated_nodes: document.getElementById('removeIsolatedNodes').checked,
+                remove_self_loops: document.getElementById('removeSelfLoops').checked,
+                remove_duplicate_edges: document.getElementById('removeDuplicateEdges').checked,
+                min_degree_threshold: parseInt(document.getElementById('minDegreeThreshold').value),
+                max_degree_threshold: document.getElementById('maxDegreeThreshold').value ? 
+                    parseInt(document.getElementById('maxDegreeThreshold').value) : null,
+                keep_largest_component: document.getElementById('keepLargestComponent').checked,
+                min_component_size: parseInt(document.getElementById('minComponentSize').value),
+                remove_bridges: document.getElementById('removeBridges').checked,
+                anomaly_detection: document.getElementById('anomalyDetection').checked,
+                preserve_important_nodes: document.getElementById('preserveImportantNodes').checked,
+                
+                // ML parameters
+                train_models: document.getElementById('trainModels').checked,
+                ml_task_type: document.getElementById('mlTaskType').value,
+                max_nodes_for_ml: parseInt(document.getElementById('maxNodesForMl').value)
+            };
+
+            try {
+                const response = await fetch('/process_advanced_graph', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(params)
+                });
+
+                const result = await response.json();
+                
+                // Hide loading spinner
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('processBtn').disabled = false;
+
+                if (result.success) {
+                    displayAdvancedResults(result);
+                } else {
+                    showAlert('danger', `Processing failed: ${result.error}`);
+                }
+            } catch (error) {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('processBtn').disabled = false;
+                showAlert('danger', `Processing error: ${error.message}`);
+            }
+        }
+
+        function displayAdvancedResults(result) {
+            const container = document.getElementById('resultsContainer');
+            
+            let html = `
+                <div class="section-card">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Advanced Processing Results
+                    </h3>
+                    
+                    <!-- Summary -->
+                    <div class="summary-text">${result.summary}</div>
+                    
+                    <!-- Metrics Grid -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="metric-value">${result.cleaned_metrics.nodes || 0}</div>
+                                <div class="metric-label">Final Nodes</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="metric-value">${result.cleaned_metrics.edges || 0}</div>
+                                <div class="metric-label">Final Edges</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="metric-value">${(result.cleaned_metrics.density || 0).toFixed(6)}</div>
+                                <div class="metric-label">Graph Density</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-card">
+                                <div class="metric-value">${(result.cleaned_metrics.degree_mean || 0).toFixed(2)}</div>
+                                <div class="metric-label">Avg Degree</div>
+                            </div>
+                        </div>
+                    </div>
+            `;
+
+            // Add Neo4j results if available
+            if (result.neo4j_analytics && Object.keys(result.neo4j_analytics).length > 0) {
+                html += `
+                    <div class="mt-4">
+                        <h4><i class="fas fa-database"></i> Neo4j Analytics Results</h4>
+                        <div class="row">
+                `;
+                
+                for (const [metric, value] of Object.entries(result.neo4j_analytics)) {
+                    html += `
+                        <div class="col-md-4">
+                            <div class="metric-card">
+                                <div class="metric-value">${typeof value === 'number' ? value.toFixed(4) : value}</div>
+                                <div class="metric-label">${metric.replace(/_/g, ' ').toUpperCase()}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `</div></div>`;
+            }
+
+            // Add ML results visualization if available
+            if (result.visualizations && result.visualizations.advanced_ml_comparison) {
+                html += `
+                    <div class="visualization-container">
+                        <h4><i class="fas fa-brain"></i> Advanced ML Performance Comparison</h4>
+                        <img src="${result.visualizations.advanced_ml_comparison}" alt="Advanced ML Comparison" class="img-fluid">
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            
+            container.innerHTML = html;
+            container.style.display = 'block';
+            
+            showAlert('success', 'Advanced graph processing completed successfully!');
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert at the top of content wrapper
+            const contentWrapper = document.querySelector('.content-wrapper');
+            contentWrapper.insertBefore(alertDiv, contentWrapper.firstChild);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('processBtn').disabled = true;
+        });
+    </script>
+</body>
+</html>
